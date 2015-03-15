@@ -3,7 +3,7 @@ import random
 
 # Linkage Models
 def NearestNeighbor(N, K):
-    return [[j % N for j in range(i, (i+K+1))] for i in range(N)]
+    return [[j % N for j in range(i, (i + K + 1))] for i in range(N)]
 
 def Unrestricted(N, K):
     options = set(range(N))
@@ -91,6 +91,12 @@ def Create_Instance(N, K, eval_const, epistasis, arrangement, number_maker, valu
     return result
 
 
+def safe_make(directory):
+    try:
+        makedirs(directory)
+    except OSError:
+        pass
+
 if __name__ == "__main__":
     import argparse
     import sys
@@ -100,7 +106,7 @@ if __name__ == "__main__":
                         help='Seed for the random number generator')
     parser.add_argument('-folder', dest='folder', type=str, default="nk_out",
                         help='Name to use when creating the output folder')
-    parser.add_argument('-training', dest='training', type=int, default=5000,
+    parser.add_argument('-training', dest='training', type=int, default=500,
                         help='The number of training instances to generate')
     parser.add_argument('-testing', dest='testing', type=int, default=50,
                         help='The number of testing instances to generate')
@@ -110,12 +116,12 @@ if __name__ == "__main__":
     # Set up folder structure
     training_folder = path.join(args.folder, "training")
     testing_folder = path.join(args.folder, "testing")
-    try:
-        makedirs(args.folder)
-        makedirs(training_folder)
-        makedirs(testing_folder)
-    except OSError:
-        pass
+    results_folder = path.join(args.folder, "results")
+
+    safe_make(args.folder)
+    safe_make(training_folder)
+    safe_make(testing_folder)
+    safe_make(results_folder)
     
     # Set up random seed
     if args.seed == None:
@@ -125,10 +131,25 @@ if __name__ == "__main__":
     chosen = Create_Class()
     with open(path.join(args.folder, "meta.txt"), "w") as f:
         f.write(" ".join(map(str, chosen)) + " " + str(args.seed) + "\n")
-        
+
+    training_files = []
     for instance in range(args.training):
-        with open(path.join(training_folder, "{:05d}.txt".format(instance)), "w") as f:
+        relative = path.join("training", "{:05d}.txt".format(instance))
+        with open(path.join(args.folder, relative), "w") as f:
             f.write(Create_Instance(*chosen))
+        training_files.append(relative)
+
+    with open(path.join(args.folder, "trainingFiles.txt"), "w") as f:
+        f.write("{0} {1}\n".format(args.training / 10, args.training))
+        f.write("\n".join(training_files) + "\n")
+
+    testing_files = []
     for instance in range(args.testing):
-        with open(path.join(testing_folder, "{:05d}.txt".format(instance)), "w") as f:
+        relative = path.join("testing", "{:05d}.txt".format(instance))
+        with open(path.join(args.folder, relative), "w") as f:
             f.write(Create_Instance(*chosen))
+        testing_files.append(relative)
+
+    with open(path.join(args.folder, "testingFiles.txt"), "w") as f:
+        f.write("{0}\n".format(args.testing))
+        f.write("\n".join(testing_files) + "\n")
