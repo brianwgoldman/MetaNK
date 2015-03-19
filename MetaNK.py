@@ -132,24 +132,14 @@ if __name__ == "__main__":
     with open(path.join(args.folder, "meta.txt"), "w") as f:
         f.write(" ".join(map(str, chosen)) + " " + str(args.seed) + "\n")
 
-    training_files = []
-    for instance in range(args.training):
-        relative = path.join("training", "{:05d}.txt".format(instance))
-        with open(path.join(args.folder, relative), "w") as f:
-            f.write(Create_Instance(*chosen))
-        training_files.append(relative)
+    for basename, number in [("training", args.training), ("testing", args.testing)]:
+        filenames = []
+        for instance in range(number):
+            relative = path.join(basename, "{:05d}.txt".format(instance))
+            with open(path.join(args.folder, relative), "w") as f:
+                f.write(Create_Instance(*chosen))
+            filenames.append(relative)
 
-    with open(path.join(args.folder, "trainingFiles.txt"), "w") as f:
-        f.write("{0} {1}\n".format(args.training / 10, args.training))
-        f.write("\n".join(training_files) + "\n")
-
-    testing_files = []
-    for instance in range(args.testing):
-        relative = path.join("testing", "{:05d}.txt".format(instance))
-        with open(path.join(args.folder, relative), "w") as f:
-            f.write(Create_Instance(*chosen))
-        testing_files.append(relative)
-
-    with open(path.join(args.folder, "testingFiles.txt"), "w") as f:
-        f.write("{0}\n".format(args.testing))
-        f.write("\n".join(testing_files) + "\n")
+        with open(path.join(args.folder, basename + "Files.txt"), "w") as f:
+            f.write("{0}\n".format(number))
+            f.write("\n".join(filenames) + "\n")
