@@ -9,8 +9,6 @@ def Unrestricted(N, K):
     options = set(range(N))
     return [[i] + random.sample(options - set([i]), K) for i in range(N)]
 
-
-
 def Separable(N, K):
     def chunks(data, size):
         start = 0
@@ -70,16 +68,18 @@ def AllUnique(RNG, K):
 
 value_count = [TwoValues, PowKValues, AllUnique]
 
+# Determine all of the settings for this problem class
 def Create_Class():
     epistasis = random.choice(linkages)
     arrangement = random.choice(rearrangement)
     number_maker = random.choice(rngs)
     value_levels = random.choice(value_count)
-    N = random.randint(50, 500)
+    N = random.randint(50, 300)
     eval_const = random.choice([1, 4, 16])
     K = random.randint(1, 5)
     return N, K, eval_const, epistasis, arrangement, number_maker, value_levels 
 
+# Generate an instance from a class description
 def Create_Instance(N, K, eval_const, epistasis, arrangement, number_maker, value_levels):
     adjacency = arrangement(N, epistasis(N, K))
     rng = value_levels(number_maker, K)
@@ -127,7 +127,7 @@ if __name__ == "__main__":
     if args.seed == None:
         args.seed = random.randint(0, sys.maxint)
     random.seed(args.seed)
-    
+
     chosen = Create_Class()
     with open(path.join(args.folder, "meta.txt"), "w") as f:
         f.write(" ".join(map(str, chosen)) + " " + str(args.seed) + "\n")
