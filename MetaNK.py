@@ -123,6 +123,9 @@ if __name__ == "__main__":
     safe_make(testing_folder)
     safe_make(results_folder)
     
+    with open(path.join(results_folder, ".gitignore"), "w") as f:
+        f.write("*.json\n")
+
     # Set up random seed
     if args.seed == None:
         args.seed = random.randint(0, sys.maxint)
