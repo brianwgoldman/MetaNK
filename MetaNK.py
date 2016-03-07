@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import random
+import math
 
 # Linkage Models
 def NearestNeighbor(N, K):
@@ -22,7 +23,43 @@ def Separable(N, K):
         parts += [[i] + random.sample(set(chunk) - set([i]), min(K, len(chunk) - 1)) for i in chunk]
     return parts
 
-linkages = [NearestNeighbor, Unrestricted, Separable]
+def Mesh(N, K):
+    # Find the smallest hyper-cube with K+1 dimensions that has at least N vertices
+    width = int(math.ceil(N ** (1 / (K + 1.0))))
+    def to_coordinates(value):
+        # Convert an integer index into coordinates in the mesh
+        coord = []
+        for _ in range(K + 1):
+            coord.append(value % width)
+            value = int(value / width)
+        return coord
+    def from_coordinates(coord):
+        # Convert coordinates in the mesh into an integer index
+        value = 0
+        for c in reversed(coord):
+            value *= width
+            value += c
+        return value
+    edges = []
+    for i in range(N):
+        coord = to_coordinates(i)
+        for dimension in range(K + 1):
+            # Create an edge going out in each dimension
+            neighbor_coord = list(coord)
+            neighbor_coord[dimension] += 1
+            neighbor_index = from_coordinates(neighbor_coord)
+            if neighbor_index >= N or neighbor_coord[dimension] >= width:
+                # Toroidal
+                neighbor_coord[dimension] = 0
+                neighbor_index = from_coordinates(neighbor_coord)
+            edges.append([i, neighbor_index])
+    return edges
+
+def SAT_like(N, K):
+    options = range(N)
+    return [random.sample(options, K + 1) for i in range(int(4.27 * N))]
+
+linkages = [NearestNeighbor, Unrestricted, Separable, Mesh, SAT_like]
 
 # Rearrangement Methods
 def Scatter(N, epistasis):
@@ -51,19 +88,19 @@ def Scaled():
 rngs = [Uniform, Normal, Scaled]
 
 # Number of unique values
-def TwoValues(RNG, K):
+def TwoValues(RNG, variables_per_row):
     options = [RNG(), RNG()]
     def TwoValues_Inner():
         return random.choice(options)
     return TwoValues_Inner
 
-def PowKValues(RNG, K):
-    options = [RNG() for _ in range(2 << K)]
+def PowKValues(RNG, variables_per_row):
+    options = [RNG() for _ in range(1 << variables_per_row)]
     def PowKValues_Inner():
         return random.choice(options)
     return PowKValues_Inner
 
-def AllUnique(RNG, K):
+def AllUnique(RNG, variables_per_row):
     return RNG
 
 value_count = [TwoValues, PowKValues, AllUnique]
@@ -82,9 +119,11 @@ def Create_Class():
 # Generate an instance from a class description
 def Create_Instance(N, K, eval_const, epistasis, arrangement, number_maker, value_levels):
     adjacency = arrangement(N, epistasis(N, K))
-    rng = value_levels(number_maker, K)
-    table = [[rng() for _ in range(2 << K)] for _ in range(N)]
-    result = "{:03d} {:06d} {:d}\n".format(N, N * N / eval_const, K)
+    rows = len(adjacency)
+    variables_per_row = len(adjacency[0])
+    rng = value_levels(number_maker, variables_per_row)
+    table = [[rng() for _ in range(1 << variables_per_row)] for _ in range(rows)]
+    result = "{:03d} {:06d} {:d} {:d}\n".format(N, 2 * N * N / eval_const, variables_per_row, rows)
     for links, fits in zip(adjacency, table):
         result += " ".join(["{:03d}".format(l) for l in links])
         result += " " + " ".join(["{:.4f}".format(f) for f in fits]) + '\n'
