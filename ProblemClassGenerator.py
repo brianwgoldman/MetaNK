@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 import random
 import math
 
@@ -17,7 +17,7 @@ def Separable(N, K):
             step = size + 1 if (len(data) - start) % size else size
             yield data[start: start + step]
             start += step
-    options = range(N)
+    options = list(range(N))
     parts = []
     for chunk in chunks(options, 2 * K):
         parts += [[i] + random.sample(set(chunk) - set([i]), min(K, len(chunk) - 1)) for i in chunk]
@@ -31,7 +31,7 @@ def Mesh(N, K):
         coord = []
         for _ in range(K + 1):
             coord.append(value % width)
-            value = int(value / width)
+            value = int(value // width)
         return coord
     def from_coordinates(coord):
         # Convert coordinates in the mesh into an integer index
@@ -56,14 +56,14 @@ def Mesh(N, K):
     return edges
 
 def SAT_like(N, K):
-    options = range(N)
+    options = list(range(N))
     return [random.sample(options, K + 1) for i in range(int(4.27 * N))]
 
 linkages = [NearestNeighbor, Unrestricted, Separable, Mesh, SAT_like]
 
 # Rearrangement Methods
 def Scatter(N, epistasis):
-    ordering = range(N)
+    ordering = list(range(N))
     random.shuffle(ordering)
     return [[ordering[x] for x in group] for group in epistasis]
 
@@ -123,7 +123,7 @@ def Create_Instance(N, K, eval_const, epistasis, arrangement, number_maker, valu
     variables_per_row = len(adjacency[0])
     rng = value_levels(number_maker, variables_per_row)
     table = [[rng() for _ in range(1 << variables_per_row)] for _ in range(rows)]
-    result = "{:03d} {:06d} {:d} {:d}\n".format(N, 2 * N * N / eval_const, variables_per_row, rows)
+    result = "{:03d} {:06d} {:d} {:d}\n".format(N, 2 * N * N // eval_const, variables_per_row, rows)
     for links, fits in zip(adjacency, table):
         result += " ".join(["{:03d}".format(l) for l in links])
         result += " " + " ".join(["{:.4f}".format(f) for f in fits]) + '\n'
@@ -140,12 +140,12 @@ if __name__ == "__main__":
     import argparse
     import sys
     from os import makedirs, path
-    parser = argparse.ArgumentParser(description="MetaNK Generator")
+    parser = argparse.ArgumentParser(description="Problem Class Generator")
     parser.add_argument('-seed', dest='seed', type=int, default=None,
                         help='Seed for the random number generator')
-    parser.add_argument('-folder', dest='folder', type=str, default="nk_out",
+    parser.add_argument('-folder', dest='folder', type=str, default="problems",
                         help='Name to use when creating the output folder')
-    parser.add_argument('-training', dest='training', type=int, default=500,
+    parser.add_argument('-training', dest='training', type=int, default=200,
                         help='The number of training instances to generate')
     parser.add_argument('-testing', dest='testing', type=int, default=50,
                         help='The number of testing instances to generate')
@@ -167,7 +167,7 @@ if __name__ == "__main__":
 
     # Set up random seed
     if args.seed == None:
-        args.seed = random.randint(0, sys.maxint)
+        args.seed = random.randint(0, sys.maxsize)
     random.seed(args.seed)
 
     chosen = Create_Class()
