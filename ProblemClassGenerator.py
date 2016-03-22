@@ -20,7 +20,7 @@ def Unrestricted(N, K):
 
 def Separable(N, K):
     # The genome is broken into 2 * K sized blocks, with each block using
-    # NearestNeighbor
+    # Unrestricted
     def chunks(data, size):
         start = 0
         while start < len(data):
